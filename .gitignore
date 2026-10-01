@@ -14,7 +14,7 @@ node_modules/
 *.tar
 *.gz
 
-data/GroundWaterDataset/
-data/NASA_VIIRS_Nighttime_Lights/
-data/ndvi
+dataset/GroundWaterDataset/
+dataset/NASA_VIIRS_Nighttime_Lights/
+dataset/ndvi
 !client/data/
