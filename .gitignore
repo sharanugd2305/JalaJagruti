@@ -1,20 +1,10 @@
-node_modules/
 .env
-
-# ==============================
-# ML / Dataset files
-# ==============================
-*.h5
-*.hdf
-*.hdf5
-*.tif
-*.tiff
-*.nc
-*.zip
-*.tar
-*.gz
-
-dataset/GroundWaterDataset/
-dataset/NASA_VIIRS_Nighttime_Lights/
-dataset/ndvi
-!client/data/
+data/
+GroundWaterDataset/*
+!GroundWaterDataset/README.md
+__pycache__/
+*.pyc
+.pytest_cache/
+frontend/node_modules/
+frontend/dist/
+.venv/
