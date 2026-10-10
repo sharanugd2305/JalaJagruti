@@ -1,0 +1,97 @@
+# JalaJagruti AI — non-secret project settings.
+# Credentials live ONLY in .env. Everything here is scientific / processing
+# configuration and may be edited, but none of it is required to run.
+
+paths:
+  groundwater_dir: GroundWaterDataset        # user-provided, read-only
+  data_dir: data                             # cache / processed / outputs
+  wards_override: null                       # optional local ward file (geojson/shp/kml)
+
+region:
+  # Model training region: Bengaluru plus a buffer so the CNN-LSTM sees
+  # enough real stations. [min_lon, min_lat, max_lon, max_lat] in EPSG:4326.
+  training_bbox: [77.20, 12.60, 78.00, 13.40]
+  # Wards are matched to stations inside this radius when no station lies
+  # within the ward itself (inverse-distance weighting of real station values).
+  idw_max_distance_km: 20.0
+  idw_max_stations: 4
+  idw_power: 2.0
+
+wards:
+  source_url: https://raw.githubusercontent.com/datameet/Municipal_Spatial_Data/master/Bangalore/BBMP.geojson
+  expected_count: 243
+  id_field_candidates: [KGISWardNo, ward_no, WARD_NO, Ward_No, ward_id, WardNo]
+  name_field_candidates: [KGISWardName, ward_name, WARD_NAME, Ward_Name, name, Name]
+
+time:
+  data_start: "2021-01-01"
+  climatology_start_year: 2011         # ERA5-Land years used for forecast climatology
+  eval_train_end: "2023-12-31"         # evaluation model: train ...
+  eval_val_end: "2024-12-31"           #                   validate (early stopping)
+  prediction_year: 2025                #                   test = out-of-sample 2025 prediction
+  final_train_end: "2024-12-31"        # forecast model: train ...
+  final_val_end: "2025-12-31"          #                 validate; rollout starts after this
+  forecast_end_year: 2030
+
+groundwater:
+  # Values matching these exactly are treated as logger sentinels, in addition
+  # to sentinels detected automatically from the data.
+  sentinel_values: [1.0, -1.0, 0.0]
+  auto_sentinel_min_share: 0.001        # share of all readings
+  auto_sentinel_min_station_share: 0.05 # share of stations showing the value
+  depth_valid_range_m: [0.05, 200.0]    # depth below ground level, metres
+  flatline_min_run: 12                  # identical consecutive readings
+  spike_window: 29                      # readings in rolling median
+  spike_mad_k: 6.0
+  spike_min_abs_m: 3.0
+  min_valid_days_per_month: 8
+  min_valid_months_per_station: 18
+  max_interpolated_gap_months: 2
+
+sentinel2:
+  resolution_deg: 0.0009              # ~100 m
+  composite: quarterly                # quarterly | monthly
+  max_cloud_cover: 80
+  tile_max_px: 512
+  min_valid_patch_fraction: 0.5
+
+viirs:
+  product: VNP46A3
+  collections: [5200, 5000]           # tried in order
+  dataset_name: AllAngle_Composite_Snow_Free
+
+era5:
+  dataset: reanalysis-era5-land-monthly-means
+  api_url: https://cds.climate.copernicus.eu/api
+
+model:
+  lookback_months: 12
+  patch_px: 32
+  ensemble_size: 5
+  epochs: 150
+  patience: 20
+  batch_size: 64
+  learning_rate: 0.001
+  lstm_hidden: 64
+  lstm_layers: 2
+  dropout: 0.2
+  seed: 20251
+  min_test_samples: 30
+
+risk:
+  # Reproducible ward risk score in [0,1] = weighted sum of components,
+  # each a fixed linear ramp (no data-dependent rescaling).
+  weights: {depth: 0.5, trend: 0.35, urban: 0.15}
+  depth_ramp_m: [5.0, 40.0]
+  trend_ramp_m_per_year: [0.0, 2.0]
+  ndbi_ramp: [-0.3, 0.2]
+  classes:            # upper bounds
+    Low: 0.33
+    Moderate: 0.55
+    High: 0.75
+    Critical: 1.01
+
+api:
+  host: 127.0.0.1
+  port: 8000
+  cors_origins: ["http://localhost:5173", "http://127.0.0.1:5173"]
